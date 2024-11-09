@@ -5,6 +5,8 @@ use egui_backend::egui::{self, vec2, Pos2, Rect};
 use egui_glfw::glfw::Context;
 use glfw::{Glfw, Window};
 
+use crate::{control::{Camera, Mouse}, grid::Grid};
+
 mod components;
 
 pub struct Game {
@@ -98,12 +100,55 @@ impl Game {
 
         let mut egui_components = self.egui_components;
 
-        while !window.should_close() {
-            glfw.poll_events();
+        let mut camera = Camera::new();
+        let mut mouse = Mouse::new();
 
+        let grid = Grid::new();
+        let render_program_grid = Grid::build_render_program();
+        let (grid_vao, _) = grid.init_render_grid();
+
+        while !window.should_close() {
+            let (w, h) = window.get_size();
+            let resolution = (w as f32, h as f32);
+
+            glfw.poll_events();
             for (_, event) in glfw::flush_messages(&events) {
                 match event {
-                    glfw::WindowEvent::Close => window.set_should_close(true),
+                    glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
+                        window.set_should_close(true);
+                    }
+    
+                    glfw::WindowEvent::MouseButton(button, action, _) => {
+                        mouse.button = button;
+    
+                        match action {
+                            glfw::Action::Press => mouse.pressed = true,
+                            _ => mouse.pressed = false,
+                        }
+                    }
+    
+                    glfw::WindowEvent::Scroll(_, y) => {
+                        if (camera.scale + y as f32) > 0.0 {
+                            camera.scale += y as f32/10.0;
+                        }
+                    }
+    
+                    glfw::WindowEvent::CursorPos(x, y) => {
+                        mouse.old_position = mouse.position;
+                        mouse.position = nalgebra::Vector2::new(x as f32, y as f32);
+    
+                        if mouse.pressed {
+                            match mouse.button {
+                                glfw::MouseButton::Button3 => camera.position += mouse.delta(),
+                                _ => {}
+                            }
+                        }
+                    },
+
+                    _ => {}
+                }
+
+                match event {
                     _ => {
                         egui_backend::handle_event(event, &mut egui_components.egui_input_state);
                     }
@@ -113,6 +158,8 @@ impl Game {
             unsafe {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::ClearColor(0.1, 0.1, 0.1, 1.0);
+
+                grid.render_grid(&camera, resolution, &render_program_grid, grid_vao);
             }
 
             Self::render_ui(&mut egui_components);
