@@ -7,3 +7,7 @@ license = "GPL-3"
 readme = "README.md"
 
 [dependencies]
+glfw = "0.58.0"
+gl = "0.14.0"
+egui = "0.29.1"
+egui_glfw = { git = "https://github.com/MayorDi/egui_glfw.git", version = "0.55.2" }

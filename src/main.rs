@@ -1,1 +1,3 @@
-fn main() {}
+fn main() {
+    celleyor::game::Game::init().run();
+}
