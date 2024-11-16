@@ -42,7 +42,7 @@ impl Game {
         Self::init_window_hints(&mut glfw);
 
         let (window, events) = glfw
-            .create_window(600, 600, "Organify", glfw::WindowMode::Windowed)
+            .create_window(600, 600, "Celleyor", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         WindowComponents {
@@ -112,7 +112,7 @@ impl Game {
         grid.layout_zones[25][26] = Some(Zone::new((1., 1., 1.)));
         grid.layout_zones[24][25] = Some(Zone::new((1., 1., 1.)));
         grid.layout_zones[24][24] = Some(Zone::new((1., 1., 1.)));
-        
+
         let render_program_grid = Grid::build_render_program();
         let (grid_vao, _) = grid.create_render_info();
 
