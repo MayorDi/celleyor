@@ -1,4 +1,2 @@
 #[derive(Debug)]
-pub struct Cell {
-
-}
+pub struct Cell {}

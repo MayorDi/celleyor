@@ -246,7 +246,7 @@ impl Zone {
                 borders |= 0b1000;
             }
         }
-        
+
         borders
     }
 }
