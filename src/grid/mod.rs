@@ -5,7 +5,8 @@ use constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID};
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo}, zone::Zone,
+    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    zone::Zone,
 };
 
 pub mod constants;
