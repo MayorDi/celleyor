@@ -5,18 +5,20 @@ use constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID};
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo}, zone::Zone,
 };
 
 pub mod constants;
 
 pub struct Grid {
-    layout_cells: [[Option<Cell>; SIZE_GRID[0]]; SIZE_GRID[1]],
+    pub layout_zones: [[Option<Zone>; SIZE_GRID[0]]; SIZE_GRID[1]],
+    pub layout_cells: [[Option<Cell>; SIZE_GRID[0]]; SIZE_GRID[1]],
 }
 
 impl Grid {
     pub fn new() -> Self {
         Self {
+            layout_zones: [[None; SIZE_GRID[0]]; SIZE_GRID[1]],
             layout_cells: [const { [const { None }; SIZE_GRID[0]] }; SIZE_GRID[1]],
         }
     }
@@ -39,7 +41,7 @@ impl Grid {
         program
     }
 
-    pub fn init_render_grid(&self) -> (Vao, Vbo) {
+    pub fn create_render_info(&self) -> (Vao, Vbo) {
         let mut vao @ mut vbo = 0;
         let vertices = [
             0.0,

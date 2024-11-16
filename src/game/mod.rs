@@ -5,7 +5,11 @@ use egui_backend::egui::{self, vec2, Pos2, Rect};
 use egui_glfw::glfw::Context;
 use glfw::{Glfw, Window};
 
-use crate::{control::{Camera, Mouse}, grid::Grid};
+use crate::{
+    control::{Camera, Mouse},
+    grid::Grid,
+    zone::Zone,
+};
 
 mod components;
 
@@ -103,10 +107,22 @@ impl Game {
         let mut camera = Camera::new();
         let mut mouse = Mouse::new();
 
-        let grid = Grid::new();
+        let mut grid = Grid::new();
+        grid.layout_zones[25][25] = Some(Zone::new((1., 1., 1.)));
+        grid.layout_zones[25][26] = Some(Zone::new((1., 1., 1.)));
+        grid.layout_zones[24][25] = Some(Zone::new((1., 1., 1.)));
+        grid.layout_zones[24][24] = Some(Zone::new((1., 1., 1.)));
+        
         let render_program_grid = Grid::build_render_program();
-        let (grid_vao, _) = grid.init_render_grid();
+        let (grid_vao, _) = grid.create_render_info();
 
+        let render_program_zones = Zone::build_render_program();
+        let (zone_vao, zone_vbo) = Zone::create_render_info();
+
+        unsafe {
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
         while !window.should_close() {
             let (w, h) = window.get_size();
             let resolution = (w as f32, h as f32);
@@ -117,33 +133,33 @@ impl Game {
                     glfw::WindowEvent::Key(glfw::Key::Escape, _, glfw::Action::Press, _) => {
                         window.set_should_close(true);
                     }
-    
+
                     glfw::WindowEvent::MouseButton(button, action, _) => {
                         mouse.button = button;
-    
+
                         match action {
                             glfw::Action::Press => mouse.pressed = true,
                             _ => mouse.pressed = false,
                         }
                     }
-    
+
                     glfw::WindowEvent::Scroll(_, y) => {
                         if (camera.scale + y as f32) > 0.0 {
-                            camera.scale += y as f32/10.0;
+                            camera.scale += y as f32 / 10.0;
                         }
                     }
-    
+
                     glfw::WindowEvent::CursorPos(x, y) => {
                         mouse.old_position = mouse.position;
                         mouse.position = nalgebra::Vector2::new(x as f32, y as f32);
-    
+
                         if mouse.pressed {
                             match mouse.button {
                                 glfw::MouseButton::Button3 => camera.position += mouse.delta(),
                                 _ => {}
                             }
                         }
-                    },
+                    }
 
                     _ => {}
                 }
@@ -160,6 +176,17 @@ impl Game {
                 gl::ClearColor(0.1, 0.1, 0.1, 1.0);
 
                 grid.render_grid(&camera, resolution, &render_program_grid, grid_vao);
+
+                let len_vec_vertices =
+                    Zone::init_render_zones(&grid.layout_zones, zone_vao, zone_vbo);
+
+                Zone::render_zone(
+                    &camera,
+                    resolution,
+                    &render_program_zones,
+                    len_vec_vertices,
+                    zone_vao,
+                );
             }
 
             Self::render_ui(&mut egui_components);

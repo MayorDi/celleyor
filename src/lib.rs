@@ -3,3 +3,4 @@ mod control;
 mod opengl;
 mod grid;
 mod cell;
+mod zone;
