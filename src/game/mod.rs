@@ -12,6 +12,7 @@ use crate::{
 };
 
 mod components;
+mod tools;
 
 pub struct Game {
     window_components: WindowComponents,
@@ -42,7 +43,7 @@ impl Game {
         Self::init_window_hints(&mut glfw);
 
         let (window, events) = glfw
-            .create_window(600, 600, "Celleyor", glfw::WindowMode::Windowed)
+            .create_window(1200, 600, "Celleyor", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         WindowComponents {
@@ -108,11 +109,6 @@ impl Game {
         let mut mouse = Mouse::new();
 
         let mut grid = Grid::new();
-        grid.layout_zones[25][25] = Some(Zone::new((1., 1., 1.)));
-        grid.layout_zones[25][26] = Some(Zone::new((1., 1., 1.)));
-        grid.layout_zones[24][25] = Some(Zone::new((1., 1., 1.)));
-        grid.layout_zones[24][24] = Some(Zone::new((1., 1., 1.)));
-
         let render_program_grid = Grid::build_render_program();
         let (grid_vao, _) = grid.create_render_info();
 
@@ -152,11 +148,15 @@ impl Game {
                     glfw::WindowEvent::CursorPos(x, y) => {
                         mouse.old_position = mouse.position;
                         mouse.position = nalgebra::Vector2::new(x as f32, y as f32);
+                        mouse.world_position = nalgebra::Vector2::new(
+                            camera.position.x / 2.0 + (mouse.position.x - resolution.0 / 2.0) / camera.scale,
+                            camera.position.y / 2.0 + (resolution.1 / 2.0 - mouse.position.y) / camera.scale,
+                        );
 
                         if mouse.pressed {
                             match mouse.button {
                                 glfw::MouseButton::Button3 => {
-                                    camera.position += mouse.delta() / camera.scale
+                                    camera.position += mouse.delta() / camera.scale;
                                 }
                                 _ => {}
                             }
@@ -191,19 +191,27 @@ impl Game {
                 );
             }
 
-            Self::render_ui(&mut egui_components);
+            Self::render_ui(&mut egui_components, &mouse);
 
             window.swap_buffers();
         }
     }
 
-    fn create_ui(ctx: &egui::Context) {
-        egui::Window::new("UI render").show(ctx, |ui| {
-            ui.label("Hello!");
+    fn create_ui(ctx: &egui::Context, mouse: &Mouse) {
+        egui::SidePanel::new(egui::containers::panel::Side::Right, "panel_tools").show(ctx, |ui| {
+            ui.heading("Celleyor");
+            ui.separator();
+        });
+
+        egui::TopBottomPanel::bottom("info_panel").show(ctx, |ui| {
+            ui.label(format!(
+                "world mouse pos: [x:\t{:.2}; y:\t{:.2}]",
+                mouse.world_position.x, mouse.world_position.y
+            ))
         });
     }
 
-    fn render_ui(egui_components: &mut EguiComponents) {
+    fn render_ui(egui_components: &mut EguiComponents, mouse: &Mouse) {
         let EguiComponents {
             egui_ctx,
             painter,
@@ -212,7 +220,7 @@ impl Game {
         } = egui_components;
 
         egui_ctx.begin_frame(egui_input_state.input.take());
-        Self::create_ui(egui_ctx);
+        Self::create_ui(egui_ctx, mouse);
 
         let egui::FullOutput {
             platform_output,
