@@ -149,8 +149,10 @@ impl Game {
                         mouse.old_position = mouse.position;
                         mouse.position = nalgebra::Vector2::new(x as f32, y as f32);
                         mouse.world_position = nalgebra::Vector2::new(
-                            camera.position.x / 2.0 + (mouse.position.x - resolution.0 / 2.0) / camera.scale,
-                            camera.position.y / 2.0 + (resolution.1 / 2.0 - mouse.position.y) / camera.scale,
+                            camera.position.x / 2.0
+                                + (mouse.position.x - resolution.0 / 2.0) / camera.scale,
+                            camera.position.y / 2.0
+                                + (resolution.1 / 2.0 - mouse.position.y) / camera.scale,
                         );
 
                         if mouse.pressed {
