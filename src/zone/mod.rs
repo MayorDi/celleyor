@@ -1,7 +1,9 @@
 use crate::{
     control::Camera,
     grid::constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID},
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{
+        get_location, load_bytes_from_file, Build, GetId, Program, Shader, Vao, Vbo,
+    },
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -84,11 +86,11 @@ impl Zone {
     pub fn build_render_program() -> Program<Shader> {
         let vs = Shader::new(
             gl::VERTEX_SHADER,
-            include_bytes!("../../res/shaders/zone/zone.vert").to_vec(),
+            load_bytes_from_file("./res/shaders/zone/zone.vert").unwrap(),
         );
         let fs = Shader::new(
             gl::FRAGMENT_SHADER,
-            include_bytes!("../../res/shaders/zone/zone.frag").to_vec(),
+            load_bytes_from_file("./res/shaders/zone/zone.frag").unwrap(),
         );
 
         let mut program = Program::new();
@@ -183,6 +185,10 @@ impl Zone {
         len_vec_vertices: usize,
         vao: Vao,
     ) {
+        if len_vec_vertices == 0 {
+            return;
+        }
+
         unsafe {
             gl::BindVertexArray(vao.0);
             {

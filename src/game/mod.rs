@@ -145,7 +145,7 @@ impl Game {
 
                     glfw::WindowEvent::Scroll(_, y) => {
                         if (camera.scale + y as f32) > 0.0 {
-                            camera.scale += y as f32 / 10.0;
+                            camera.scale += y as f32 / 2.0;
                         }
                     }
 
@@ -155,7 +155,9 @@ impl Game {
 
                         if mouse.pressed {
                             match mouse.button {
-                                glfw::MouseButton::Button3 => camera.position += mouse.delta(),
+                                glfw::MouseButton::Button3 => {
+                                    camera.position += mouse.delta() / camera.scale
+                                }
                                 _ => {}
                             }
                         }

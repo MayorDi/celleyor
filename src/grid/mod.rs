@@ -5,7 +5,9 @@ use constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID};
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{
+        get_location, load_bytes_from_file, Build, GetId, Program, Shader, Vao, Vbo,
+    },
     zone::Zone,
 };
 
@@ -27,11 +29,11 @@ impl Grid {
     pub fn build_render_program() -> Program<Shader> {
         let vs = Shader::new(
             gl::VERTEX_SHADER,
-            include_bytes!("../../res/shaders/grid/grid.vert").to_vec(),
+            load_bytes_from_file("./res/shaders/grid/grid.vert").unwrap(),
         );
         let fs = Shader::new(
             gl::FRAGMENT_SHADER,
-            include_bytes!("../../res/shaders/grid/grid.frag").to_vec(),
+            load_bytes_from_file("./res/shaders/grid/grid.frag").unwrap(),
         );
 
         let mut program = Program::new();
