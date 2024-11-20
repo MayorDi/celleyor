@@ -1,6 +1,7 @@
 use std::ptr::null;
 
 use constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID};
+use layout::Layout;
 
 use crate::{
     cell::Cell,
@@ -11,18 +12,19 @@ use crate::{
     zone::Zone,
 };
 
+pub mod layout;
 pub mod constants;
 
 pub struct Grid {
-    pub layout_zones: [[Option<Zone>; SIZE_GRID[0]]; SIZE_GRID[1]],
-    pub layout_cells: [[Option<Cell>; SIZE_GRID[0]]; SIZE_GRID[1]],
+    pub layout_zones: Layout<Zone>,
+    pub _layout_cells: Layout<Cell>,
 }
 
 impl Grid {
     pub fn new() -> Self {
         Self {
-            layout_zones: [[None; SIZE_GRID[0]]; SIZE_GRID[1]],
-            layout_cells: [const { [const { None }; SIZE_GRID[0]] }; SIZE_GRID[1]],
+            layout_zones: Layout::new(),
+            _layout_cells: Layout::new(),
         }
     }
 

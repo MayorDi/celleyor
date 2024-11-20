@@ -4,6 +4,7 @@ use egui_glfw::{self as egui_backend, EguiInputState};
 use egui_backend::egui::{self, vec2, Pos2, Rect};
 use egui_glfw::glfw::Context;
 use glfw::{Glfw, Window};
+use tools::{SelectTools, Tools};
 
 use crate::{
     control::{Camera, Mouse},
@@ -12,7 +13,7 @@ use crate::{
 };
 
 mod components;
-mod tools;
+pub(crate) mod tools;
 
 pub struct Game {
     window_components: WindowComponents,
@@ -107,6 +108,7 @@ impl Game {
 
         let mut camera = Camera::new();
         let mut mouse = Mouse::new();
+        let mut tools = Tools::default();
 
         let mut grid = Grid::new();
         let render_program_grid = Grid::build_render_program();
@@ -131,38 +133,16 @@ impl Game {
                     }
 
                     glfw::WindowEvent::MouseButton(button, action, _) => {
-                        mouse.button = button;
-
-                        match action {
-                            glfw::Action::Press => mouse.pressed = true,
-                            _ => mouse.pressed = false,
-                        }
+                        mouse.event_button(&button, &action)
                     }
-
-                    glfw::WindowEvent::Scroll(_, y) => {
-                        if (camera.scale + y as f32) > 0.0 {
-                            camera.scale += y as f32 / 2.0;
-                        }
-                    }
+                    glfw::WindowEvent::Scroll(_, y) => camera.update_scale(y),
 
                     glfw::WindowEvent::CursorPos(x, y) => {
                         mouse.old_position = mouse.position;
                         mouse.position = nalgebra::Vector2::new(x as f32, y as f32);
-                        mouse.world_position = nalgebra::Vector2::new(
-                            camera.position.x / 2.0
-                                + (mouse.position.x - resolution.0 / 2.0) / camera.scale,
-                            camera.position.y / 2.0
-                                + (resolution.1 / 2.0 - mouse.position.y) / camera.scale,
-                        );
-
-                        if mouse.pressed {
-                            match mouse.button {
-                                glfw::MouseButton::Button3 => {
-                                    camera.position += mouse.delta() / camera.scale;
-                                }
-                                _ => {}
-                            }
-                        }
+                        mouse.update_world_position(&camera, resolution);
+                        mouse.update_grid_position();
+                        mouse.event_action(&mut camera, &tools, &mut grid);
                     }
 
                     _ => {}
@@ -191,29 +171,50 @@ impl Game {
                     len_vec_vertices,
                     zone_vao,
                 );
+
+                // render selected tools
+                tools.is_zone_to_render_zone(&camera, resolution, &mouse, &render_program_zones);
             }
 
-            Self::render_ui(&mut egui_components, &mouse);
+            Self::render_ui(&mut egui_components, &mouse, &mut tools);
 
             window.swap_buffers();
         }
     }
 
-    fn create_ui(ctx: &egui::Context, mouse: &Mouse) {
+    fn create_ui(ctx: &egui::Context, mouse: &Mouse, tools: &mut Tools) {
         egui::SidePanel::new(egui::containers::panel::Side::Right, "panel_tools").show(ctx, |ui| {
             ui.heading("Celleyor");
             ui.separator();
+
+            ui.label("Tools:");
+            egui::containers::ComboBox::from_id_source("select_tools")
+                .selected_text(format!("{:?}", tools.select_tools))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut tools.select_tools, SelectTools::None, "None");
+                    ui.selectable_value(
+                        &mut tools.select_tools,
+                        SelectTools::AddNewZone,
+                        "Add new zone",
+                    );
+                });
+
+            ui.separator();
+            tools.render_ui(ui);
         });
 
         egui::TopBottomPanel::bottom("info_panel").show(ctx, |ui| {
             ui.label(format!(
-                "world mouse pos: [x:\t{:.2}; y:\t{:.2}]",
-                mouse.world_position.x, mouse.world_position.y
+                "world mouse pos: [x:\t{:.2}; y:\t{:.2}]; grid mouse position: [x: {}; y: {}]",
+                mouse.world_position.x,
+                mouse.world_position.y,
+                mouse.grid_position.x,
+                mouse.grid_position.y
             ))
         });
     }
 
-    fn render_ui(egui_components: &mut EguiComponents, mouse: &Mouse) {
+    fn render_ui(egui_components: &mut EguiComponents, mouse: &Mouse, tools: &mut Tools) {
         let EguiComponents {
             egui_ctx,
             painter,
@@ -222,7 +223,8 @@ impl Game {
         } = egui_components;
 
         egui_ctx.begin_frame(egui_input_state.input.take());
-        Self::create_ui(egui_ctx, mouse);
+
+        Self::create_ui(egui_ctx, mouse, tools);
 
         let egui::FullOutput {
             platform_output,
