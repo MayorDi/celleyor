@@ -54,7 +54,9 @@ impl Mouse {
     pub fn event_tools(&self, tools: &Tools, grid: &mut Grid) {
         match tools.select_tools {
             SelectTools::AddNewZone => grid.layout_zones[self.grid_position] = Some(tools.zone),
-            SelectTools::AddNewCell => grid.layout_cells[self.grid_position] = Some(tools.cell.clone()),
+            SelectTools::AddNewCell => {
+                grid.layout_cells[self.grid_position] = Some(tools.cell.clone())
+            }
             SelectTools::None => {}
         }
     }

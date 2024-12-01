@@ -1,7 +1,9 @@
 use nalgebra::Vector2;
 
 use crate::{
-    control::Camera, grid::{constants::SIZE_RENDER_CELL_GRID, layout::Layout}, opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo}
+    control::Camera,
+    grid::{constants::SIZE_RENDER_CELL_GRID, layout::Layout},
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +15,10 @@ pub struct Cell {
 
 impl Cell {
     pub fn create_render_data(&self, pos: Vector2<usize>) -> [f32; 42] {
-        let (x, y) = (pos.x as f32 * SIZE_RENDER_CELL_GRID, pos.y as f32 * SIZE_RENDER_CELL_GRID);
+        let (x, y) = (
+            pos.x as f32 * SIZE_RENDER_CELL_GRID,
+            pos.y as f32 * SIZE_RENDER_CELL_GRID,
+        );
         let vertices = [
             x,
             y,
@@ -86,7 +91,7 @@ impl Cell {
         if vertices.is_empty() {
             return 0;
         }
-        
+
         unsafe {
             gl::BindVertexArray(vao.0);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo.0);
@@ -127,7 +132,6 @@ impl Cell {
                     (4 * size_of::<f32>()) as _,
                 );
                 gl::EnableVertexAttribArray(2);
-
             }
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindVertexArray(0);

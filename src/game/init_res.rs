@@ -8,7 +8,6 @@ pub fn init_program_shader<'a>() -> HashMap<&'a str, Program<Shader>> {
     programs.insert("grid", build_grid_program_shader());
     programs.insert("cell", build_cell_program_shader());
 
-
     programs
 }
 

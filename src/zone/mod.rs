@@ -1,9 +1,10 @@
 use crate::{
     control::Camera,
-    grid::{constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID}, layout::Layout},
-    opengl::prelude::{
-        get_location, load_bytes_from_file, Build, GetId, Program, Shader, Vao, Vbo,
+    grid::{
+        constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID},
+        layout::Layout,
     },
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -79,11 +80,7 @@ impl Zone {
         (Vao(vao), Vbo(vbo))
     }
 
-    pub fn init_render_zones(
-        zones: &Layout<Zone>,
-        vao: Vao,
-        vbo: Vbo,
-    ) -> usize {
+    pub fn init_render_zones(zones: &Layout<Zone>, vao: Vao, vbo: Vbo) -> usize {
         let mut vertices = vec![];
         for (x, col) in zones.iter().enumerate() {
             for (y, zone) in col.iter().enumerate() {
@@ -189,10 +186,7 @@ impl Zone {
         }
     }
 
-    fn checking_neighbors(
-        pos: (i32, i32),
-        zones: &Layout<Zone>,
-    ) -> i32 {
+    fn checking_neighbors(pos: (i32, i32), zones: &Layout<Zone>) -> i32 {
         use nalgebra::clamp;
         let mut borders = 0;
 

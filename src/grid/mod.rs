@@ -6,14 +6,12 @@ use layout::Layout;
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{
-        get_location, load_bytes_from_file, Build, GetId, Program, Shader, Vao, Vbo,
-    },
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
     zone::Zone,
 };
 
-pub mod layout;
 pub mod constants;
+pub mod layout;
 
 pub struct Grid {
     pub layout_zones: Layout<Zone>,

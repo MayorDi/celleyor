@@ -148,7 +148,7 @@ impl Tools {
                         &vertices[0] as *const f32 as _,
                         gl::DYNAMIC_DRAW,
                     );
-    
+
                     gl::VertexAttribPointer(
                         0,
                         2,
@@ -158,7 +158,7 @@ impl Tools {
                         0 as _,
                     );
                     gl::EnableVertexAttribArray(0);
-    
+
                     gl::VertexAttribPointer(
                         1,
                         2,
@@ -168,7 +168,7 @@ impl Tools {
                         (2 * size_of::<f32>()) as _,
                     );
                     gl::EnableVertexAttribArray(1);
-    
+
                     gl::VertexAttribPointer(
                         2,
                         3,
