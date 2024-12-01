@@ -17,33 +17,15 @@ pub mod constants;
 
 pub struct Grid {
     pub layout_zones: Layout<Zone>,
-    pub _layout_cells: Layout<Cell>,
+    pub layout_cells: Layout<Cell>,
 }
 
 impl Grid {
     pub fn new() -> Self {
         Self {
             layout_zones: Layout::new(),
-            _layout_cells: Layout::new(),
+            layout_cells: Layout::new(),
         }
-    }
-
-    pub fn build_render_program() -> Program<Shader> {
-        let vs = Shader::new(
-            gl::VERTEX_SHADER,
-            load_bytes_from_file("./res/shaders/grid/grid.vert").unwrap(),
-        );
-        let fs = Shader::new(
-            gl::FRAGMENT_SHADER,
-            load_bytes_from_file("./res/shaders/grid/grid.frag").unwrap(),
-        );
-
-        let mut program = Program::new();
-        program.push_shader(vs);
-        program.push_shader(fs);
-        program.build().unwrap();
-
-        program
     }
 
     pub fn create_render_info(&self) -> (Vao, Vbo) {

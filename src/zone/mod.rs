@@ -79,24 +79,6 @@ impl Zone {
         (Vao(vao), Vbo(vbo))
     }
 
-    pub fn build_render_program() -> Program<Shader> {
-        let vs = Shader::new(
-            gl::VERTEX_SHADER,
-            load_bytes_from_file("./res/shaders/zone/zone.vert").unwrap(),
-        );
-        let fs = Shader::new(
-            gl::FRAGMENT_SHADER,
-            load_bytes_from_file("./res/shaders/zone/zone.frag").unwrap(),
-        );
-
-        let mut program = Program::new();
-        program.push_shader(vs);
-        program.push_shader(fs);
-        program.build().unwrap();
-
-        program
-    }
-
     pub fn init_render_zones(
         zones: &Layout<Zone>,
         vao: Vao,

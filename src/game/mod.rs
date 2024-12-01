@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use components::{EguiComponents, WindowComponents};
 use egui_glfw::{self as egui_backend, EguiInputState};
 
@@ -7,20 +9,24 @@ use glfw::{Glfw, Window};
 use tools::{SelectTools, Tools};
 
 use crate::{
+    cell::Cell,
     control::{Camera, Mouse},
     grid::Grid,
+    opengl::prelude::{Program, Shader},
     zone::Zone,
 };
 
 mod components;
+mod init_res;
 pub(crate) mod tools;
 
-pub struct Game {
+pub struct Game<'a> {
     window_components: WindowComponents,
     egui_components: EguiComponents,
+    program_shader: HashMap<&'a str, Program<Shader>>,
 }
 
-impl Game {
+impl<'a> Game<'a> {
     pub fn init() -> Self {
         let mut wc = Self::init_window_components();
 
@@ -36,6 +42,7 @@ impl Game {
         Self {
             window_components: wc,
             egui_components: egui_c,
+            program_shader: init_res::init_program_shader::<'a>(),
         }
     }
 
@@ -109,13 +116,12 @@ impl Game {
         let mut camera = Camera::new();
         let mut mouse = Mouse::new();
         let mut tools = Tools::default();
+        let mut time = 0.0;
 
         let mut grid = Grid::new();
-        let render_program_grid = Grid::build_render_program();
         let (grid_vao, _) = grid.create_render_info();
-
-        let render_program_zones = Zone::build_render_program();
         let (zone_vao, zone_vbo) = Zone::create_render_info();
+        let (cell_vao, cell_vbo) = Cell::create_render_info();
 
         unsafe {
             gl::Enable(gl::BLEND);
@@ -159,22 +165,45 @@ impl Game {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::ClearColor(0.1, 0.1, 0.1, 1.0);
 
-                grid.render_grid(&camera, resolution, &render_program_grid, grid_vao);
+                grid.render_grid(&camera, resolution, &self.program_shader["grid"], grid_vao);
 
                 let len_vec_vertices =
                     Zone::init_render_zones(&grid.layout_zones, zone_vao, zone_vbo);
-
                 Zone::render_zone(
                     &camera,
                     resolution,
-                    &render_program_zones,
+                    &self.program_shader["zone"],
                     len_vec_vertices,
                     zone_vao,
                 );
 
+                let len_vec_vertices =
+                    Cell::init_render_cells(&grid.layout_cells, cell_vao, cell_vbo);
+                Cell::render_cell(
+                    &camera,
+                    resolution,
+                    &self.program_shader["cell"],
+                    len_vec_vertices,
+                    cell_vao,
+                    time,
+                );
+
                 // render selected tools
-                tools.is_zone_to_render_zone(&camera, resolution, &mouse, &render_program_zones);
+                tools.is_zone_to_render_zone(
+                    &camera,
+                    resolution,
+                    &mouse,
+                    &self.program_shader["zone"],
+                );
+                tools.is_cell_to_render_cell(
+                    &camera,
+                    resolution,
+                    &mouse,
+                    &self.program_shader["cell"],
+                );
             }
+
+            time += 0.01;
 
             Self::render_ui(&mut egui_components, &mouse, &mut tools);
 
@@ -196,6 +225,11 @@ impl Game {
                         &mut tools.select_tools,
                         SelectTools::AddNewZone,
                         "Add new zone",
+                    );
+                    ui.selectable_value(
+                        &mut tools.select_tools,
+                        SelectTools::AddNewCell,
+                        "Add new cell",
                     );
                 });
 

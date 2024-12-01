@@ -1,4 +1,5 @@
 use crate::{
+    cell::Cell,
     control::{Camera, Mouse},
     opengl::prelude::{get_location, GetId, Program, Shader},
     zone::Zone,
@@ -8,6 +9,7 @@ use crate::{
 pub struct Tools {
     pub select_tools: SelectTools,
     pub zone: Zone,
+    pub cell: Cell,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -15,6 +17,7 @@ pub enum SelectTools {
     #[default]
     None,
     AddNewZone,
+    AddNewCell,
 }
 
 impl Tools {
@@ -23,6 +26,9 @@ impl Tools {
             SelectTools::None => {}
             SelectTools::AddNewZone => {
                 ui.color_edit_button_rgb(&mut self.zone.color);
+            }
+            SelectTools::AddNewCell => {
+                ui.color_edit_button_rgb(&mut self.cell.color);
             }
         }
     }
@@ -115,6 +121,86 @@ impl Tools {
 
                 gl::DeleteVertexArrays(1, &zone_vao.0);
                 gl::DeleteBuffers(1, &zone_vbo.0);
+            }
+        }
+    }
+
+    pub fn is_cell_to_render_cell(
+        &self,
+        camera: &Camera,
+        resolution: (f32, f32),
+        mouse: &Mouse,
+        program: &Program<Shader>,
+    ) {
+        if let SelectTools::AddNewCell = self.select_tools {
+            let cell = &self.cell;
+
+            let (cell_vao, cell_vbo) = Cell::create_render_info();
+            let vertices = cell.create_render_data(mouse.grid_position);
+
+            unsafe {
+                gl::BindVertexArray(cell_vao.0);
+                gl::BindBuffer(gl::ARRAY_BUFFER, cell_vbo.0);
+                {
+                    gl::BufferData(
+                        gl::ARRAY_BUFFER,
+                        (vertices.len() * size_of::<f32>()) as isize,
+                        &vertices[0] as *const f32 as _,
+                        gl::DYNAMIC_DRAW,
+                    );
+    
+                    gl::VertexAttribPointer(
+                        0,
+                        2,
+                        gl::FLOAT,
+                        gl::FALSE,
+                        (size_of::<f32>() * 7) as i32,
+                        0 as _,
+                    );
+                    gl::EnableVertexAttribArray(0);
+    
+                    gl::VertexAttribPointer(
+                        1,
+                        2,
+                        gl::FLOAT,
+                        gl::FALSE,
+                        (size_of::<f32>() * 7) as i32,
+                        (2 * size_of::<f32>()) as _,
+                    );
+                    gl::EnableVertexAttribArray(1);
+    
+                    gl::VertexAttribPointer(
+                        2,
+                        3,
+                        gl::FLOAT,
+                        gl::FALSE,
+                        (size_of::<f32>() * 7) as i32,
+                        (4 * size_of::<f32>()) as _,
+                    );
+                    gl::EnableVertexAttribArray(2);
+                }
+                gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+                {
+                    gl::UseProgram(program.id());
+                    gl::Uniform2f(
+                        get_location(program, "u_resolution"),
+                        resolution.0,
+                        resolution.1,
+                    );
+                    gl::Uniform2f(
+                        get_location(program, "u_camera_pos"),
+                        camera.position.x,
+                        camera.position.y,
+                    );
+                    gl::Uniform1f(get_location(program, "u_camera_scale"), camera.scale);
+                    gl::Uniform1f(get_location(program, "u_time"), 0.0);
+                    gl::DrawArrays(gl::TRIANGLES, 0, (vertices.len() / 7) as _);
+                }
+                gl::BindVertexArray(0);
+
+                gl::DeleteVertexArrays(1, &cell_vao.0);
+                gl::DeleteBuffers(1, &cell_vbo.0);
             }
         }
     }
