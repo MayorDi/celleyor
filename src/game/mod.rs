@@ -1,18 +1,16 @@
-use std::collections::HashMap;
-
 use components::{EguiComponents, WindowComponents};
 use egui_glfw::{self as egui_backend, EguiInputState};
 
 use egui_backend::egui::{self, vec2, Pos2, Rect};
 use egui_glfw::glfw::Context;
 use glfw::{Glfw, Window};
+use init_res::Programs;
 use tools::{SelectTools, Tools};
 
 use crate::{
     cell::Cell,
     control::{Camera, Mouse},
     grid::Grid,
-    opengl::prelude::{Program, Shader},
     zone::Zone,
 };
 
@@ -20,13 +18,13 @@ mod components;
 mod init_res;
 pub(crate) mod tools;
 
-pub struct Game<'a> {
+pub struct Game {
     window_components: WindowComponents,
     egui_components: EguiComponents,
-    program_shader: HashMap<&'a str, Program<Shader>>,
+    program_shader: Programs,
 }
 
-impl<'a> Game<'a> {
+impl Game {
     pub fn init() -> Self {
         let mut wc = Self::init_window_components();
 
@@ -42,7 +40,7 @@ impl<'a> Game<'a> {
         Self {
             window_components: wc,
             egui_components: egui_c,
-            program_shader: init_res::init_program_shader::<'a>(),
+            program_shader: Programs::init(),
         }
     }
 
@@ -165,14 +163,14 @@ impl<'a> Game<'a> {
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                 gl::ClearColor(0.1, 0.1, 0.1, 1.0);
 
-                grid.render_grid(&camera, resolution, &self.program_shader["grid"], grid_vao);
+                grid.render_grid(&camera, resolution, &self.program_shader.grid, grid_vao);
 
                 let len_vec_vertices =
                     Zone::init_render_zones(&grid.layout_zones, zone_vao, zone_vbo);
                 Zone::render_zone(
                     &camera,
                     resolution,
-                    &self.program_shader["zone"],
+                    &self.program_shader.zone,
                     len_vec_vertices,
                     zone_vao,
                 );
@@ -182,7 +180,7 @@ impl<'a> Game<'a> {
                 Cell::render_cell(
                     &camera,
                     resolution,
-                    &self.program_shader["cell"],
+                    &self.program_shader.cell,
                     len_vec_vertices,
                     cell_vao,
                     time,
@@ -193,13 +191,13 @@ impl<'a> Game<'a> {
                     &camera,
                     resolution,
                     &mouse,
-                    &self.program_shader["zone"],
+                    &self.program_shader.zone,
                 );
                 tools.is_cell_to_render_cell(
                     &camera,
                     resolution,
                     &mouse,
-                    &self.program_shader["cell"],
+                    &self.program_shader.cell,
                 );
             }
 

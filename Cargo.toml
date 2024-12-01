@@ -12,3 +12,7 @@ gl = "0.14.0"
 nalgebra = "0.33.2"
 egui = "0.29.1"
 egui_glfw = { git = "https://github.com/MayorDi/egui_glfw.git", version = "0.55.2" }
+proc_opengl = { path = "./crates/proc_opengl" }
+
+[workspace]
+members = ["./crates/proc_opengl"]
