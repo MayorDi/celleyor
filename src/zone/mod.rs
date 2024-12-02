@@ -1,19 +1,18 @@
 use crate::{
     control::Camera,
-    grid::constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID},
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    grid::{
+        constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID},
+        layout::Layout,
+    },
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Zone {
-    color: (f32, f32, f32),
+    pub(crate) color: [f32; 3],
 }
 
 impl Zone {
-    pub fn new(color: (f32, f32, f32)) -> Self {
-        Self { color }
-    }
-
     pub fn create_render_data(&self, pos: (f32, f32), borders: i32) -> [f32; 48] {
         let (x, y) = (pos.0 * SIZE_RENDER_CELL_GRID, pos.1 * SIZE_RENDER_CELL_GRID);
         let vertices = [
@@ -21,49 +20,49 @@ impl Zone {
             y,
             0.0,
             0.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
             x + SIZE_RENDER_CELL_GRID,
             y,
             1.0,
             0.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
             x,
             y + SIZE_RENDER_CELL_GRID,
             0.0,
             1.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
             x,
             y + SIZE_RENDER_CELL_GRID,
             0.0,
             1.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
             x + SIZE_RENDER_CELL_GRID,
             y + SIZE_RENDER_CELL_GRID,
             1.0,
             1.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
             x + SIZE_RENDER_CELL_GRID,
             y,
             1.0,
             0.0,
-            self.color.0,
-            self.color.1,
-            self.color.2,
+            self.color[0],
+            self.color[1],
+            self.color[2],
             borders as f32,
         ];
 
@@ -81,29 +80,7 @@ impl Zone {
         (Vao(vao), Vbo(vbo))
     }
 
-    pub fn build_render_program() -> Program<Shader> {
-        let vs = Shader::new(
-            gl::VERTEX_SHADER,
-            include_bytes!("../../res/shaders/zone/zone.vert").to_vec(),
-        );
-        let fs = Shader::new(
-            gl::FRAGMENT_SHADER,
-            include_bytes!("../../res/shaders/zone/zone.frag").to_vec(),
-        );
-
-        let mut program = Program::new();
-        program.push_shader(vs);
-        program.push_shader(fs);
-        program.build().unwrap();
-
-        program
-    }
-
-    pub fn init_render_zones(
-        zones: &[[Option<Zone>; SIZE_GRID[0]]; SIZE_GRID[1]],
-        vao: Vao,
-        vbo: Vbo,
-    ) -> usize {
+    pub fn init_render_zones(zones: &Layout<Zone>, vao: Vao, vbo: Vbo) -> usize {
         let mut vertices = vec![];
         for (x, col) in zones.iter().enumerate() {
             for (y, zone) in col.iter().enumerate() {
@@ -183,6 +160,10 @@ impl Zone {
         len_vec_vertices: usize,
         vao: Vao,
     ) {
+        if len_vec_vertices == 0 {
+            return;
+        }
+
         unsafe {
             gl::BindVertexArray(vao.0);
             {
@@ -198,17 +179,14 @@ impl Zone {
                     camera.position.y,
                 );
                 gl::Uniform1f(get_location(program, "u_camera_scale"), camera.scale);
-                gl::DrawArrays(gl::TRIANGLES, 0, (len_vec_vertices) as i32);
+                gl::DrawArrays(gl::TRIANGLES, 0, (len_vec_vertices / 8) as i32);
                 gl::UseProgram(0);
             }
             gl::BindVertexArray(0);
         }
     }
 
-    fn checking_neighbors(
-        pos: (i32, i32),
-        zones: &[[Option<Zone>; SIZE_GRID[0]]; SIZE_GRID[1]],
-    ) -> i32 {
+    fn checking_neighbors(pos: (i32, i32), zones: &Layout<Zone>) -> i32 {
         use nalgebra::clamp;
         let mut borders = 0;
 

@@ -1,45 +1,29 @@
 use std::ptr::null;
 
 use constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID};
+use layout::Layout;
 
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{get_location, Build, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
     zone::Zone,
 };
 
 pub mod constants;
+pub mod layout;
 
 pub struct Grid {
-    pub layout_zones: [[Option<Zone>; SIZE_GRID[0]]; SIZE_GRID[1]],
-    pub layout_cells: [[Option<Cell>; SIZE_GRID[0]]; SIZE_GRID[1]],
+    pub layout_zones: Layout<Zone>,
+    pub layout_cells: Layout<Cell>,
 }
 
 impl Grid {
     pub fn new() -> Self {
         Self {
-            layout_zones: [[None; SIZE_GRID[0]]; SIZE_GRID[1]],
-            layout_cells: [const { [const { None }; SIZE_GRID[0]] }; SIZE_GRID[1]],
+            layout_zones: Layout::new(),
+            layout_cells: Layout::new(),
         }
-    }
-
-    pub fn build_render_program() -> Program<Shader> {
-        let vs = Shader::new(
-            gl::VERTEX_SHADER,
-            include_bytes!("../../res/shaders/grid/grid.vert").to_vec(),
-        );
-        let fs = Shader::new(
-            gl::FRAGMENT_SHADER,
-            include_bytes!("../../res/shaders/grid/grid.frag").to_vec(),
-        );
-
-        let mut program = Program::new();
-        program.push_shader(vs);
-        program.push_shader(fs);
-        program.build().unwrap();
-
-        program
     }
 
     pub fn create_render_info(&self) -> (Vao, Vbo) {

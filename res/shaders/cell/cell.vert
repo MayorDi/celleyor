@@ -1,6 +1,11 @@
 #version 330 core
 
 layout (location = 0) in vec2 pos_vertex;
+layout (location = 1) in vec2 st;
+layout (location = 2) in vec3 color;
+
+out vec2 ST;
+out vec3 color_cell;
 
 uniform vec2 u_resolution;
 uniform vec2 u_camera_pos;
@@ -15,12 +20,12 @@ void main(void) {
         1.0,            0.0,            0.0, 0.0,
         0.0,            1.0,            0.0, 0.0,
         0.0,            0.0,            1.0, 0.0,
-        -n_cam_pos.x,    -n_cam_pos.y,   0.0, 1.0
+        -n_cam_pos.x,   -n_cam_pos.y,  0.0, 1.0
     );
 
     mat4 scale_matrix = mat4(
-        u_camera_scale,   0.0,            0.0, 0.0,
-        0.0,            u_camera_scale,  0.0, 0.0,
+        u_camera_scale, 0.0,            0.0, 0.0,
+        0.0,            u_camera_scale, 0.0, 0.0,
         0.0,            0.0,            1.0, 0.0,
         0.0,            0.0,            0.0, 1.0
     );
@@ -28,4 +33,6 @@ void main(void) {
     vec4 pos =  scale_matrix * transform_matrix * uv;
 
     gl_Position = vec4(pos);
+    ST = st;
+    color_cell = color;
 }
