@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 layout (location = 0) in vec2 pos_vertex;
 layout (location = 1) in vec2 st;
@@ -7,9 +7,9 @@ layout (location = 2) in vec3 color;
 out vec2 ST;
 out vec3 color_cell;
 
-uniform vec2 u_resolution;
-uniform vec2 u_camera_pos;
-uniform float u_camera_scale;
+layout (location = 0) uniform vec2 u_resolution;
+layout (location = 1) uniform vec2 u_camera_pos;
+layout (location = 2) uniform float u_camera_scale;
 
 
 void main(void) {

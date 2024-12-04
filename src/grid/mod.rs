@@ -77,16 +77,16 @@ impl Grid {
             {
                 gl::UseProgram(program.id());
                 gl::Uniform2f(
-                    get_location(program, "u_resolution"),
+                    0,
                     resolution.0,
                     resolution.1,
                 );
                 gl::Uniform2f(
-                    get_location(program, "u_camera_pos"),
+                    1,
                     camera.position.x,
                     camera.position.y,
                 );
-                gl::Uniform1f(get_location(program, "u_camera_scale"), camera.scale);
+                gl::Uniform1f(2, camera.scale);
                 gl::DrawArrays(gl::LINE_LOOP, 0, 4);
                 gl::UseProgram(0);
             }

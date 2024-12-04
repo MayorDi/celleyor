@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 in vec2 St;
 in vec3 Color;
@@ -6,8 +6,8 @@ in float Ltrb;
 
 out vec4 fragColor;
 
-uniform vec2 u_resolution;
-uniform float u_camera_scale;
+layout (location = 0) uniform vec2 u_resolution;
+layout (location = 2) uniform float u_camera_scale;
 
 float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);

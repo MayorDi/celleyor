@@ -1,10 +1,10 @@
-#version 330 core
+#version 430 core
 
 layout (location = 0) in vec2 pos_vertex;
 
-uniform vec2 u_resolution;
-uniform vec2 u_camera_pos;
-uniform float u_camera_scale;
+layout (location = 0) uniform vec2 u_resolution;
+layout (location = 1) uniform vec2 u_camera_pos;
+layout (location = 2) uniform float u_camera_scale;
 
 
 void main(void) {

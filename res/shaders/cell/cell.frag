@@ -1,4 +1,4 @@
-#version 330 core 
+#version 430 core 
 
 #define MAX_RADIUS_CELL 0.45
 #define RADIUS_BALLS 0.08
@@ -10,8 +10,10 @@
 in vec2 ST;
 in vec3 color_cell;
 
-uniform float u_time;
-uniform vec2 u_resolution;
+out vec4 color;
+
+layout (location = 0) uniform vec2 u_resolution;
+layout (location = 3) uniform float u_time;
 
 void main(void) {
     float time = u_time * SPEED;
@@ -57,5 +59,5 @@ void main(void) {
     alpha = smoothstep(radius_cell + beta, radius_cell - contrast + beta, d);
     col.a = alpha;
 
-    gl_FragColor = col;
+    color = col;
 }

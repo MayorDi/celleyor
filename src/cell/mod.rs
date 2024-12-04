@@ -3,7 +3,7 @@ use nalgebra::Vector2;
 use crate::{
     control::Camera,
     grid::{constants::SIZE_RENDER_CELL_GRID, layout::Layout},
-    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo}, uniform,
 };
 
 #[derive(Debug, Clone)]
@@ -157,17 +157,17 @@ impl Cell {
             {
                 gl::UseProgram(program.id());
                 gl::Uniform2f(
-                    get_location(program, "u_resolution"),
+                    0,
                     resolution.0,
                     resolution.1,
                 );
                 gl::Uniform2f(
-                    get_location(program, "u_camera_pos"),
+                    1,
                     camera.position.x,
                     camera.position.y,
                 );
-                gl::Uniform1f(get_location(program, "u_camera_scale"), camera.scale);
-                gl::Uniform1f(get_location(program, "u_time"), time);
+                gl::Uniform1f(2, camera.scale);
+                gl::Uniform1f(3, time);
                 gl::DrawArrays(gl::TRIANGLES, 0, (len_vec_vertices / 7) as i32);
                 gl::UseProgram(0);
             }
