@@ -53,10 +53,10 @@ impl Mouse {
 
     pub fn event_tools(&self, tools: &Tools, grid: &mut Grid) {
         match tools.select_tools {
-            SelectTools::AddNewZone => grid.layout_zones[self.grid_position] = Some(tools.zone),
-            SelectTools::AddNewCell => {
-                grid.layout_cells[self.grid_position] = Some(tools.cell.clone())
-            }
+            SelectTools::AddNewZone => grid.layout_zones.set_by_pos(self.grid_position, tools.zone),
+            SelectTools::AddNewCell => grid
+                .layout_cells
+                .set_by_pos(self.grid_position, tools.cell.clone()),
             SelectTools::None => {}
         }
     }

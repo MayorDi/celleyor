@@ -45,7 +45,7 @@ impl Tools {
 
             let (zone_vao, zone_vbo) = Zone::create_render_info();
             let vertices_zone = zone.create_render_data(
-                (mouse.grid_position.x as f32, mouse.grid_position.y as f32),
+                mouse.grid_position,
                 0,
             );
 

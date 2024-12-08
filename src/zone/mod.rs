@@ -2,9 +2,9 @@ use crate::{
     control::Camera,
     grid::{
         constants::{SIZE_GRID, SIZE_RENDER_CELL_GRID},
-        layout::Layout,
+        layout::{idx_to_pos, pos_to_idx, Layout},
     },
-    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{GetId, Program, Shader, Vao, Vbo},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -13,8 +13,12 @@ pub struct Zone {
 }
 
 impl Zone {
-    pub fn create_render_data(&self, pos: (f32, f32), borders: i32) -> [f32; 48] {
-        let (x, y) = (pos.0 * SIZE_RENDER_CELL_GRID, pos.1 * SIZE_RENDER_CELL_GRID);
+    pub fn create_render_data(&self, pos: nalgebra::Vector2<usize>, borders: i32) -> [f32; 48] {
+        let borders = borders as f32;
+        let (x, y) = (
+            pos.x as f32 * SIZE_RENDER_CELL_GRID,
+            pos.y as f32 * SIZE_RENDER_CELL_GRID,
+        );
         let vertices = [
             x,
             y,
@@ -23,7 +27,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
             x + SIZE_RENDER_CELL_GRID,
             y,
             1.0,
@@ -31,7 +35,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
             x,
             y + SIZE_RENDER_CELL_GRID,
             0.0,
@@ -39,7 +43,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
             x,
             y + SIZE_RENDER_CELL_GRID,
             0.0,
@@ -47,7 +51,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
             x + SIZE_RENDER_CELL_GRID,
             y + SIZE_RENDER_CELL_GRID,
             1.0,
@@ -55,7 +59,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
             x + SIZE_RENDER_CELL_GRID,
             y,
             1.0,
@@ -63,7 +67,7 @@ impl Zone {
             self.color[0],
             self.color[1],
             self.color[2],
-            borders as f32,
+            borders,
         ];
 
         vertices
@@ -81,18 +85,16 @@ impl Zone {
     }
 
     pub fn init_render_zones(zones: &Layout<Zone>, vao: Vao, vbo: Vbo) -> usize {
-        let mut vertices = vec![];
-        for (x, col) in zones.iter().enumerate() {
-            for (y, zone) in col.iter().enumerate() {
-                if let Some(zone) = zone {
-                    let borders = Self::checking_neighbors((x as i32, y as i32), zones);
-                    vertices.extend(zone.create_render_data((x as f32, y as f32), borders));
-                }
-            }
+        if !zones.is_need_render {
+            return 0;
         }
 
-        if vertices.is_empty() {
-            return 0;
+        let mut vertices = vec![];
+        for i in 0..zones.len() {
+            if let Some(zone) = zones[i] {
+                let borders = Self::checking_neighbors(i, zones);
+                vertices.extend(zone.create_render_data(idx_to_pos(i), borders));
+            }
         }
 
         unsafe {
@@ -168,16 +170,8 @@ impl Zone {
             gl::BindVertexArray(vao.0);
             {
                 gl::UseProgram(program.id());
-                gl::Uniform2f(
-                    0,
-                    resolution.0,
-                    resolution.1,
-                );
-                gl::Uniform2f(
-                    1,
-                    camera.position.x,
-                    camera.position.y,
-                );
+                gl::Uniform2f(0, resolution.0, resolution.1);
+                gl::Uniform2f(1, camera.position.x, camera.position.y);
                 gl::Uniform1f(2, camera.scale);
                 gl::DrawArrays(gl::TRIANGLES, 0, (len_vec_vertices / 8) as i32);
                 gl::UseProgram(0);
@@ -186,43 +180,37 @@ impl Zone {
         }
     }
 
-    fn checking_neighbors(pos: (i32, i32), zones: &Layout<Zone>) -> i32 {
+    fn checking_neighbors(index: usize, zones: &Layout<Zone>) -> i32 {
         use nalgebra::clamp;
         let mut borders = 0;
 
         let x_clamp = |x| clamp(x, 0, SIZE_GRID[0] as i32 - 1);
         let y_clamp = |y| clamp(y, 0, SIZE_GRID[1] as i32 - 1);
 
-        let (x, y) = (pos.0 as usize, pos.1 as usize);
+        let pos = idx_to_pos(index);
+        let (x, y) = (pos.x as i32, pos.y as i32);
         let (left, top, right, bottom) = (
-            x_clamp(pos.0 - 1),
-            y_clamp(pos.1 + 1),
-            x_clamp(pos.0 + 1),
-            y_clamp(pos.1 - 1),
+            pos_to_idx(nalgebra::Vector2::new(x_clamp(x - 1) as usize, pos.y)),
+            pos_to_idx(nalgebra::Vector2::new(pos.x, y_clamp(y + 1) as usize)),
+            pos_to_idx(nalgebra::Vector2::new(x_clamp(x + 1) as usize, pos.y)),
+            pos_to_idx(nalgebra::Vector2::new(pos.x, y_clamp(y - 1) as usize)),
         );
 
-        if left != pos.0 {
-            if zones[left as usize][y].is_some() {
-                borders |= 0b0001;
-            }
+        let (x, y) = (pos.x as usize, pos.y as usize);
+        if left != x && zones[left].is_some() {
+            borders |= 0b0001;
         }
 
-        if top != pos.1 {
-            if zones[x][top as usize].is_some() {
-                borders |= 0b0010;
-            }
+        if top != y && zones[top].is_some() {
+            borders |= 0b0010;
         }
 
-        if right != pos.0 {
-            if zones[right as usize][y].is_some() {
-                borders |= 0b0100;
-            }
+        if right != x && zones[right].is_some() {
+            borders |= 0b0100;
         }
 
-        if bottom != pos.1 {
-            if zones[x][bottom as usize].is_some() {
-                borders |= 0b1000;
-            }
+        if bottom != y && zones[bottom].is_some() {
+            borders |= 0b1000;
         }
 
         borders

@@ -2,8 +2,8 @@ use nalgebra::Vector2;
 
 use crate::{
     control::Camera,
-    grid::{constants::SIZE_RENDER_CELL_GRID, layout::Layout},
-    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo}, uniform,
+    grid::{constants::SIZE_RENDER_CELL_GRID, layout::{idx_to_pos, Layout}},
+    opengl::prelude::{GetId, Program, Shader, Vao, Vbo}
 };
 
 #[derive(Debug, Clone)]
@@ -79,17 +79,15 @@ impl Cell {
     }
 
     pub fn init_render_cells(layout_cells: &Layout<Cell>, vao: Vao, vbo: Vbo) -> usize {
-        let mut vertices = vec![];
-        for (x, col) in layout_cells.iter().enumerate() {
-            for (y, cell) in col.iter().enumerate() {
-                if let Some(cell) = cell {
-                    vertices.extend(cell.create_render_data(Vector2::new(x, y)));
-                }
-            }
+        if !layout_cells.is_need_render {
+            return 0;
         }
 
-        if vertices.is_empty() {
-            return 0;
+        let mut vertices = vec![];
+        for i in 0..layout_cells.len() {
+            if let Some(cell) = &layout_cells[i] {
+                vertices.extend(cell.create_render_data(idx_to_pos(i)));
+            }
         }
 
         unsafe {

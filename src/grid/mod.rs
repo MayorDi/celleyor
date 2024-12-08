@@ -6,7 +6,7 @@ use layout::Layout;
 use crate::{
     cell::Cell,
     control::Camera,
-    opengl::prelude::{get_location, GetId, Program, Shader, Vao, Vbo},
+    opengl::prelude::{GetId, Program, Shader, Vao, Vbo},
     zone::Zone,
 };
 

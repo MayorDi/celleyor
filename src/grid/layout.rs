@@ -1,45 +1,72 @@
-use std::ops::{Index, IndexMut};
+use std::ops::Index;
 
 use super::constants::SIZE_GRID;
 
 pub struct Layout<T> {
-    inner: [[Option<T>; SIZE_GRID[0]]; SIZE_GRID[1]],
+    pub is_need_render: bool,
+    count_zones: usize,
+    inner: Vec<Option<T>>,
 }
 
-impl<T> Layout<T> {
+impl<T: Clone> Layout<T> {
     pub fn new() -> Self {
         Self {
-            inner: [const { [const { None }; SIZE_GRID[0]] }; SIZE_GRID[1]],
+            is_need_render: false,
+            count_zones: 0,
+            inner: [const { None }; SIZE_GRID[0] * SIZE_GRID[1]].to_vec(),
         }
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, [Option<T>; SIZE_GRID[0]]> {
-        self.inner.iter()
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn set_by_idx(&mut self, index: usize, value: T) {
+        self.inner[index] = Some(value);
+        self.count_zones += 1;
+        self.is_need_render = self.count_zones != 0;
+    }
+
+    pub fn set_by_pos(&mut self, pos: nalgebra::Vector2<usize>, value: T) {
+        self.inner[pos_to_idx(pos)] = Some(value);
+        self.count_zones += 1;
+        self.is_need_render = self.count_zones != 0;
+    }
+
+    pub fn del_by_idx(&mut self, index: usize) {
+        self.inner[index] = None;
+        self.count_zones -= 1;
+        self.is_need_render = self.count_zones != 0;
+    }
+
+    pub fn del_by_pos(&mut self, pos: nalgebra::Vector2<usize>) {
+        self.inner[pos_to_idx(pos)] = None;
+        self.count_zones -= 1;
+        self.is_need_render = self.count_zones != 0;
     }
 }
 
 impl<T> Index<nalgebra::Vector2<usize>> for Layout<T> {
     type Output = Option<T>;
     fn index(&self, index: nalgebra::Vector2<usize>) -> &Self::Output {
-        &self.inner[index.x][index.y]
-    }
-}
-
-impl<T> IndexMut<nalgebra::Vector2<usize>> for Layout<T> {
-    fn index_mut(&mut self, index: nalgebra::Vector2<usize>) -> &mut Self::Output {
-        &mut self.inner[index.x][index.y]
+        &self.inner[index.x]
     }
 }
 
 impl<T> Index<usize> for Layout<T> {
-    type Output = [Option<T>];
+    type Output = Option<T>;
     fn index(&self, index: usize) -> &Self::Output {
         &self.inner[index]
     }
 }
 
-impl<T> IndexMut<usize> for Layout<T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.inner[index]
-    }
+#[inline]
+pub fn pos_to_idx(pos: nalgebra::Vector2<usize>) -> usize {
+    pos.y * SIZE_GRID[0] + pos.x
+}
+
+#[inline]
+pub const fn idx_to_pos(index: usize) -> nalgebra::Vector2<usize> {
+    nalgebra::Vector2::new((index % SIZE_GRID[0]), (index / SIZE_GRID[0]))
 }

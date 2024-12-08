@@ -206,6 +206,7 @@ impl Game {
             Self::render_ui(&mut egui_components, &mouse, &mut tools);
 
             window.swap_buffers();
+            std::thread::sleep(std::time::Duration::from_micros(1_000_000 / 60));
         }
     }
 
