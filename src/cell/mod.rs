@@ -172,6 +172,10 @@ impl Cell {
             gl::BindVertexArray(0);
         }
     }
+
+    pub fn update(layout_cells: &mut Layout<Self>) {
+        
+    }
 }
 
 impl Default for Cell {

@@ -196,20 +196,20 @@ impl Zone {
             pos_to_idx(nalgebra::Vector2::new(pos.x, y_clamp(y - 1) as usize)),
         );
 
-        let (x, y) = (pos.x as usize, pos.y as usize);
-        if left != x && zones[left].is_some() {
+        let idx = pos_to_idx(pos);
+        if left != idx && zones[left].is_some() {
             borders |= 0b0001;
         }
 
-        if top != y && zones[top].is_some() {
+        if top != idx && zones[top].is_some() {
             borders |= 0b0010;
         }
 
-        if right != x && zones[right].is_some() {
+        if right != idx && zones[right].is_some() {
             borders |= 0b0100;
         }
 
-        if bottom != y && zones[bottom].is_some() {
+        if bottom != idx && zones[bottom].is_some() {
             borders |= 0b1000;
         }
 
